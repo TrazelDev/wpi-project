@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <!-- Image view added to display logo at the top -->
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/logo"
+        android:layout_gravity="center"/>
+
+    <!-- Gender radio buttons -->
+
+
+    <RadioGroup
+        android:id="@+id/transportation_options"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="20dp">
+
+        <RadioButton
+            android:id="@+id/car_button"
+            android:layout_width="78dp"
+            android:layout_height="match_parent"
+            android:text="Car" />
+
+        <RadioButton
+            android:id="@+id/bus_button"
+            android:layout_width="70dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:text="Bus" />
+
+        <RadioButton
+            android:id="@+id/foot_button"
+            android:layout_width="86dp"
+            android:layout_height="match_parent"
+            android:text="Foot" />
+
+        <RadioButton
+            android:id="@+id/bicycle_button"
+            android:layout_width="96dp"
+            android:layout_height="match_parent"
+            android:text="Bicycle" />
+
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/start_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="Start" />
+
+
+
+    <Button
+        android:id="@+id/stop_foot_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"/>
+
+    <Button
+        android:id="@+id/traffic_jam_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Traffic Jam"
+        android:visibility="gone" />
+
+</LinearLayout>

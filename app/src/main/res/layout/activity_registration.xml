@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <!-- Title -->
+
+    <!-- Please fill in the details -->
+
+    <!-- Gender radio buttons -->
+
+    <TextView
+        android:id="@+id/textViewDetails"
+        android:layout_width="188dp"
+        android:layout_height="55dp"
+        android:layout_marginBottom="16dp"
+        android:text="Please fill in the details" />
+
+    <RadioGroup
+        android:id="@+id/radioGroupGender"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radioButtonMale"
+            android:layout_width="78dp"
+            android:layout_height="match_parent"
+            android:text="Male" />
+
+        <RadioButton
+            android:id="@+id/radioButtonFemale"
+            android:layout_width="92dp"
+            android:layout_height="match_parent"
+            android:text="Female" />
+
+    </RadioGroup>
+
+    <!-- School input field -->
+    <EditText
+        android:id="@+id/editTextSchool"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your school name"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Living area input field -->
+    <EditText
+        android:id="@+id/editTextLivingArea"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your living area"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Register button -->
+    <Button
+        android:id="@+id/buttonRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Register"
+        android:onClick="registerUser"/>
+
+</LinearLayout>
