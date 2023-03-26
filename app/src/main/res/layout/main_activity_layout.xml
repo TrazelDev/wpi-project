@@ -75,4 +75,10 @@
         android:text="Traffic Jam"
         android:visibility="gone" />
 
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TextView" />
+
 </LinearLayout>
