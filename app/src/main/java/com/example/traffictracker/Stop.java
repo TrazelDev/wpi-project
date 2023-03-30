@@ -1,38 +1,50 @@
 package com.example.traffictracker;
 
+import android.annotation.SuppressLint;
 import android.location.Location;
 
 import java.sql.Time;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
-public class Stop {
-    private final Location stopLocation;
-    private final Time stopStart;
-    private Time stopEnd;
-    private Time totalStopTime;
+public class Stop
+{
+    private Point _startPoint;
+    private Date _startTime;
+    private Point _endPoint;
+    private Date _endTime;
 
-    public Stop(Location stopLocation){
-        this.stopLocation = stopLocation;
-        this.stopStart = new Time(stopLocation.getTime());
+    public Stop(Point startPoint){
+        _startTime = TimeMan.getDate();
+        _startPoint = startPoint;
     }
 
-    public void endStop(Time stopEnd) {
-        this.stopEnd = stopEnd;
-        this.totalStopTime = new Time(this.stopEnd.getTime() - this.stopStart.getTime());
+    @SuppressLint("NewApi")
+    public Duration endStop(Point endPoint) {
+        _endPoint = endPoint;
+        _endTime = TimeMan.getDate();
+
+        return TimeMan.DateDiff(_startTime, _endTime);
     }
 
-    public Location getStopLocation() {
-        return stopLocation;
-    }
 
-    public Time getStopStart() {
-        return stopStart;
-    }
-
-    public Time getStopEnd() {
-        return stopEnd;
-    }
-
-    public Time getTotalStopTime() {
-        return totalStopTime;
-    }
+    //public Location getStopLocation() {
+    //    return stopLocation;
+    //}
+//
+    //public Time getStopStart() {
+    //    return stopStart;
+    //}
+//
+    //public Time getStopEnd() {
+    //    return stopEnd;
+    //}
+//
+    //public Time getTotalStopTime() {
+    //    return totalStopTime;
+    //}
 }
