@@ -26,6 +26,8 @@ import android.widget.RadioGroup;
 import android.Manifest;
 import android.widget.TextView;
 
+import com.mongodb.client.MongoDatabase;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ import java.util.TimeZone;
 public class MainActivity extends AppCompatActivity implements LocationListener {
     private LocationManager locationManager;
     private LocationListener locationListener;
+
     private RadioGroup transportationOptions;
     private Button startButton;
     private Button stopButton;
