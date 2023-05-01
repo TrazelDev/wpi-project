@@ -19,6 +19,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -31,6 +32,10 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
+import com.mongodb.ServerApi;
+import com.mongodb.ServerApiVersion;
 
 import org.bson.Document;
 
@@ -44,7 +49,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import io.realm.Realm;
 
 
 //tasks:
@@ -65,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private Handler handler;
     private int i;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,26 +86,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         checking = findViewById(R.id.textView1);
         trip = null;
+        saveTrip2();
 
         handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if(trip != null)
-                {
+                if (trip != null) {
                     int milliSec = trip.getTrackerState() * 1000;
-                    if(milliSec == 0)
-                    {
+                    if (milliSec == 0) {
                         checking.setText(trip.addPoint(getLocation()));
                         handler.postDelayed(this, milliSec); // Schedule the task again in 1 seconds
-                    }
-                    else
-                    {
+                    } else {
                         handler.postDelayed(this, 2000); // Schedule the task again in 1 seconds
                     }
-                }
-                else
-                {
+                } else {
                     handler.postDelayed(this, 2000); // Schedule the task again in 1 seconds
                 }
             }
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             // function that is in charge of operations that needs to happen when the start and end buttons are pressed
             public void onClick(View view) {
                 // checking if no was no option that was selected
-                if(!(transportationOptions.getCheckedRadioButtonId() != R.id.car_button &&
+                if (!(transportationOptions.getCheckedRadioButtonId() != R.id.car_button &&
                         transportationOptions.getCheckedRadioButtonId() != R.id.bus_button &&
                         transportationOptions.getCheckedRadioButtonId() != R.id.foot_button &&
                         transportationOptions.getCheckedRadioButtonId() != R.id.bicycle_button)
@@ -119,8 +119,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     if (startButton.getText().equals("Start")) {
                         boolean state = startButtonOperations();
                         trip = new Trip(getLocation(), state);
-                    }
-                    else {
+                    } else {
                         endButtonOperations();
                         trip.endTrip(getLocation());
                         checking.setText(trip.returnResults());
@@ -188,21 +187,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onClick(View view) {
                 Point point = getLocation();
-                if(!point.checkEmpty())
-                {
+                if (!point.checkEmpty()) {
                     if (stopButton.getText().equals("Stop")) {
                         stopButton.setText("End of Stop");
                         trip.addStop(point);
                         trip.setState(Trip.MovingStates.STOP);
-                    }
-                    else {
+                    } else {
                         stopButton.setText("Stop");
                         trip.updateStop(point);
                         trip.backMainState();
                     }
-                }
-                else
-                {
+                } else {
                     // error something
                 }
             }
@@ -212,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onClick(View view) {
                 Point point = getLocation();
-                if(!point.checkEmpty()) {
+                if (!point.checkEmpty()) {
                     if (trafficJamButton.getText().equals("Traffic Jam")) {
                         trafficJamButton.setText("End of Traffic Jam");
                         trip.addJam(point);
@@ -222,9 +217,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         trip.updateJam(point);
                         trip.backMainState();
                     }
-                }
-                else
-                {
+                } else {
                     // error something
                 }
             }
@@ -232,8 +225,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
-    public void createDialog()
-    {
+    public void createDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Error");
         builder.setMessage("Phone has no permission for location tracker.\npls give an access for the location tracking in the settings and start a new trip after that");
@@ -250,8 +242,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         Point point;
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             point = retrieveLocation();
-            if(point.checkEmpty())
-            {
+            if (point.checkEmpty()) {
                 createDialog();
             }
             return retrieveLocation();
@@ -261,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         createDialog();
         return new Point(0, 0);
     }
+
     @SuppressLint("MissingPermission")
     private Point retrieveLocation() {
         LocationManager manger = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -297,44 +289,72 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
 
             return point;
-        }
-        else
-        {
+        } else {
             return new Point(0, 0);
         }
     }
 
 
-    public void saveTrip()
-    {
+    public void saveTrip() {
+        String uri = "mongodb+srv://TrafficTracker:wpi_project@cluster0.ltkn6xs.mongodb.net/?retryWrites=true&w=majority";
         try {
-            String uri = "mongodb+srv://TrafficTracker:wpi_project@cluster0.ltkn6xs.mongodb.net/?retryWrites=true&w=majority";
             MongoClient mongoClient = MongoClients.create(uri);
             MongoDatabase db = mongoClient.getDatabase("TrafficData");
             MongoCollection<Document> trips = db.getCollection("Trips");
             Document tripDoc = new Document();
-            AddValues(tripDoc);
+            //AddValues(tripDoc);
             trips.insertOne(tripDoc);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("connection failed");
         }
     }
 
-    private void AddValues(Document tripDoc) {
-        double distance = trip.get_totalDistance();
-        Duration duration = trip.get_tripDuration();
-        Point start_point = trip.get_startPoint();
-        Point end_point = trip.get_endPoint();
-        int trip_type = trip.getTrackerState();
+    public void saveTrip2() {
+        String connectionString = "mongodb+srv://TrafficTracker:wpi_project@cluster0.ltkn6xs.mongodb.net/?retryWrites=true&w=majority";
+        ServerApi serverApi = ServerApi.builder()
+                .version(ServerApiVersion.V1)
+                .build();
+        try {
+            MongoClientSettings settings = MongoClientSettings.builder()
+                    .applyConnectionString(new ConnectionString(connectionString))
+                    .serverApi(serverApi)
+                    .build();
 
-        tripDoc.append("distance", distance);
-        tripDoc.append("duration", duration);
-        tripDoc.append("start_point", start_point);
-        tripDoc.append("end_point", end_point);
-        tripDoc.append("trip_type", trip_type);
+            MongoClient mongoClient = MongoClients.create(settings);
 
+            // Use the MongoClient object to interact with the MongoDB Atlas cluster
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("MongoClient", "Failed to connect to MongoDB Atlas: " + e.getMessage());
+        }
+        // Create a new client and connect to the server
+//        try (MongoClient mongoClient = MongoClients.create(settings)) {
+//            try {
+//                // Send a ping to confirm a successful connection
+//                MongoDatabase database = mongoClient.getDatabase("admin");
+//                database.runCommand(new Document("ping", 1));
+//                System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
+//            } catch (MongoException e) {
+//                e.printStackTrace();
+//            }
     }
+
+
+//    private void AddValues(Document tripDoc) {
+//        double distance = trip.get_totalDistance();
+//        Duration duration = trip.get_tripDuration();
+//        Point start_point = trip.get_startPoint();
+//        Point end_point = trip.get_endPoint();
+//        int trip_type = trip.getTrackerState();
+//
+//        tripDoc.append("distance", distance);
+//        tripDoc.append("duration", duration);
+//        tripDoc.append("start_point", start_point);
+//        tripDoc.append("end_point", end_point);
+//        tripDoc.append("trip_type", trip_type);
+
+//}
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
