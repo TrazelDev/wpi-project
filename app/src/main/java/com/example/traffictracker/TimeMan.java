@@ -28,7 +28,6 @@ public class TimeMan {
         // Calculate the time difference in milliseconds
         long timeDiff = end.getTime() - start.getTime();
 
-        Duration duration = Duration.ofMillis(timeDiff);
-        return duration;
+        return Duration.ofMillis(timeDiff);
     }
 }

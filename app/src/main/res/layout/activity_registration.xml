@@ -41,6 +41,12 @@
             android:layout_height="match_parent"
             android:text="Female" />
 
+        <RadioButton
+            android:id="@+id/radioButtonNotSay"
+            android:layout_width="140dp"
+            android:layout_height="match_parent"
+            android:text="Prefer not to say" />
+
     </RadioGroup>
 
     <!-- School input field -->

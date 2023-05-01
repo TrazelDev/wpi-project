@@ -26,14 +26,26 @@ import android.widget.RadioGroup;
 import android.Manifest;
 import android.widget.TextView;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+
+import org.bson.Document;
+
 import java.io.IOException;
 import java.text.DateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import io.realm.Realm;
+
 
 //tasks:
 // 1. create things to do when there is no location access to not destroy the data
@@ -89,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 }
                 else
                 {
-                    handler.postDelayed(this, 1000); // Schedule the task again in 1 seconds
+                    handler.postDelayed(this, 2000); // Schedule the task again in 1 seconds
                 }
             }
         }, 1000); // Start the task after 1 second
@@ -107,10 +119,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     if (startButton.getText().equals("Start")) {
                         boolean state = startButtonOperations();
                         trip = new Trip(getLocation(), state);
-                    } else {
+                    }
+                    else {
                         endButtonOperations();
                         trip.endTrip(getLocation());
                         checking.setText(trip.returnResults());
+                        saveTrip();
                         trip = null;
                     }
                 }
@@ -293,6 +307,32 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     public void saveTrip()
     {
+        try {
+            String uri = "mongodb+srv://TrafficTracker:wpi_project@cluster0.ltkn6xs.mongodb.net/?retryWrites=true&w=majority";
+            MongoClient mongoClient = MongoClients.create(uri);
+            MongoDatabase db = mongoClient.getDatabase("TrafficData");
+            MongoCollection<Document> trips = db.getCollection("Trips");
+            Document tripDoc = new Document();
+            AddValues(tripDoc);
+            trips.insertOne(tripDoc);
+        }
+        catch (Exception e) {
+            System.out.println("connection failed");
+        }
+    }
+
+    private void AddValues(Document tripDoc) {
+        double distance = trip.get_totalDistance();
+        Duration duration = trip.get_tripDuration();
+        Point start_point = trip.get_startPoint();
+        Point end_point = trip.get_endPoint();
+        int trip_type = trip.getTrackerState();
+
+        tripDoc.append("distance", distance);
+        tripDoc.append("duration", duration);
+        tripDoc.append("start_point", start_point);
+        tripDoc.append("end_point", end_point);
+        tripDoc.append("trip_type", trip_type);
 
     }
 
