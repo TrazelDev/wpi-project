@@ -9,6 +9,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 
+import io.realm.annotations.RealmClass;
+
 
 public class Trip {
     private ArrayList<Stop> _stopsList;

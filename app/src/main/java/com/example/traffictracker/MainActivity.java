@@ -1,6 +1,7 @@
 package com.example.traffictracker;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -19,6 +20,8 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.UserHandle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -27,17 +30,15 @@ import android.widget.RadioGroup;
 import android.Manifest;
 import android.widget.TextView;
 
-import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.MongoException;
-import com.mongodb.ServerApi;
-import com.mongodb.ServerApiVersion;
+
+
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -48,7 +49,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
+import io.realm.OrderedCollectionChangeSet;
+import io.realm.OrderedRealmCollectionChangeListener;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
+import io.realm.mongodb.App;
+import io.realm.mongodb.AppConfiguration;
+import io.realm.mongodb.Credentials;
+import io.realm.mongodb.User;
+import io.realm.mongodb.sync.SyncConfiguration;
 
 
 //tasks:
@@ -66,10 +80,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private TextView checking;
     private ArrayList<Stop> stopList;
     private Trip trip;
-
     private Handler handler;
     private int i;
+    private App app;
+    private Realm uiThreadRealm;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,14 +97,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         stopButton.setVisibility(View.GONE);
         trafficJamButton = findViewById(R.id.traffic_jam_button);
         trafficJamButton.setVisibility(View.GONE);
-        startButton.setBackgroundColor(getResources().getColor(android.R.color.holo_green_dark));
+        startButton.setBackgroundColor(getResources().getColor(android.R.color.holo_green_dark, null));
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         checking = findViewById(R.id.textView1);
         trip = null;
-        saveTrip2();
 
-        handler = new Handler();
+        connectToRealm();
+        
+        handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -225,6 +242,55 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
+    private void connectToRealm() {
+        Realm.init(this);
+
+        app = new App(new AppConfiguration.Builder("realmsyncapp-flfge")
+                .build());
+
+        Credentials credentials = Credentials.anonymous();
+        app.loginAsync(credentials, result -> {
+            if (result.isSuccess()) {
+                Log.v("QUICKSTART", "Successfully authenticated anonymously.");
+                User user = app.currentUser();
+                String partitionValue = "wpi_project";
+                SyncConfiguration config = new SyncConfiguration.Builder(
+                        user,
+                        partitionValue)
+                        .build();
+                uiThreadRealm = Realm.getInstance(config);
+                addChangeListenerToRealm(uiThreadRealm);
+                FutureTask<String> task = new FutureTask<>(new BackgroundQuickStart(app.currentUser()), "test");
+                ExecutorService executorService = Executors.newFixedThreadPool(2);
+                executorService.execute(task);
+            } else {
+                Log.e("QUICKSTART", "Failed to log in. Error: " + result.getError());
+            }
+        });
+
+    }
+
+    private void addChangeListenerToRealm(Realm realm) {
+        // all tasks in the realm
+        RealmResults<Task> tasks = uiThreadRealm.where(Task.class).findAllAsync();
+        tasks.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Task>>() {
+            @Override
+            public void onChange(RealmResults<Task> collection, OrderedCollectionChangeSet changeSet) {
+                // process deletions in reverse order if maintaining parallel data structures so indices don't change as you iterate
+                OrderedCollectionChangeSet.Range[] deletions = changeSet.getDeletionRanges();
+                for (OrderedCollectionChangeSet.Range range : deletions) {
+                    Log.v("QUICKSTART", "Deleted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));
+                }
+                OrderedCollectionChangeSet.Range[] insertions = changeSet.getInsertionRanges();
+                for (OrderedCollectionChangeSet.Range range : insertions) {
+                    Log.v("QUICKSTART", "Inserted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
+                OrderedCollectionChangeSet.Range[] modifications = changeSet.getChangeRanges();
+                for (OrderedCollectionChangeSet.Range range : modifications) {
+                    Log.v("QUICKSTART", "Updated range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
+            }
+        });
+    }
+
     public void createDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Error");
@@ -263,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         if (location != null) {
             point = new Point(location.getLatitude(), location.getLongitude());
 
-            // geocoder is for converting
+            // Geocoder2 is for converting
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
 
 
@@ -295,49 +361,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
 
+
     public void saveTrip() {
-        String uri = "mongodb+srv://TrafficTracker:wpi_project@cluster0.ltkn6xs.mongodb.net/?retryWrites=true&w=majority";
-        try {
-            MongoClient mongoClient = MongoClients.create(uri);
-            MongoDatabase db = mongoClient.getDatabase("TrafficData");
-            MongoCollection<Document> trips = db.getCollection("Trips");
-            Document tripDoc = new Document();
-            //AddValues(tripDoc);
-            trips.insertOne(tripDoc);
-        } catch (Exception e) {
-            System.out.println("connection failed");
-        }
-    }
 
-    public void saveTrip2() {
-        String connectionString = "mongodb+srv://TrafficTracker:wpi_project@cluster0.ltkn6xs.mongodb.net/?retryWrites=true&w=majority";
-        ServerApi serverApi = ServerApi.builder()
-                .version(ServerApiVersion.V1)
-                .build();
-        try {
-            MongoClientSettings settings = MongoClientSettings.builder()
-                    .applyConnectionString(new ConnectionString(connectionString))
-                    .serverApi(serverApi)
-                    .build();
 
-            MongoClient mongoClient = MongoClients.create(settings);
-
-            // Use the MongoClient object to interact with the MongoDB Atlas cluster
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("MongoClient", "Failed to connect to MongoDB Atlas: " + e.getMessage());
-        }
-        // Create a new client and connect to the server
-//        try (MongoClient mongoClient = MongoClients.create(settings)) {
-//            try {
-//                // Send a ping to confirm a successful connection
-//                MongoDatabase database = mongoClient.getDatabase("admin");
-//                database.runCommand(new Document("ping", 1));
-//                System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
-//            } catch (MongoException e) {
-//                e.printStackTrace();
-//            }
     }
 
 
@@ -359,5 +386,46 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @Override
     public void onLocationChanged(@NonNull Location location) {
 
+    }
+
+    public class BackgroundQuickStart implements Runnable {
+        User user;
+        public BackgroundQuickStart(User user) {
+            this.user = user;
+        }
+        @Override
+        public void run() {
+            String partitionValue = "My Project";
+            SyncConfiguration config = new SyncConfiguration.Builder(
+                    user,
+                    partitionValue)
+                    .build();
+            Realm backgroundThreadRealm = Realm.getInstance(config);
+            Task task = new Task("New Task");
+            backgroundThreadRealm.executeTransaction (transactionRealm -> {
+                transactionRealm.insert(task);
+            });
+            // all tasks in the realm
+            RealmResults<Task> tasks = backgroundThreadRealm.where(Task.class).findAll();
+            // you can also filter a collection
+            RealmResults<Task> tasksThatBeginWithN = tasks.where().beginsWith("name", "N").findAll();
+            RealmResults<Task> openTasks = tasks.where().equalTo("status", TaskStatus.Open.name()).findAll();
+            Task otherTask = tasks.get(0);
+            // all modifications to a realm must happen inside of a write block
+            backgroundThreadRealm.executeTransaction( transactionRealm -> {
+                Task innerOtherTask = transactionRealm.where(Task.class).equalTo("_id", otherTask.get_id()).findFirst();
+                innerOtherTask.setStatus(TaskStatus.Complete);
+            });
+            Task yetAnotherTask = tasks.get(0);
+            ObjectId yetAnotherTaskId = yetAnotherTask.get_id();
+            // all modifications to a realm must happen inside of a write block
+            backgroundThreadRealm.executeTransaction( transactionRealm -> {
+                Task innerYetAnotherTask = transactionRealm.where(Task.class).equalTo("_id", yetAnotherTaskId).findFirst();
+                innerYetAnotherTask.deleteFromRealm();
+            });
+            // because this background thread uses synchronous realm transactions, at this point all
+            // transactions have completed and we can safely close the realm
+            backgroundThreadRealm.close();
+        }
     }
 }
