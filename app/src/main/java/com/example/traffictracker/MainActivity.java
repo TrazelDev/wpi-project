@@ -58,6 +58,7 @@ import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 import io.realm.mongodb.App;
 import io.realm.mongodb.AppConfiguration;
@@ -244,6 +245,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void connectToRealm() {
+
         Realm.init(this);
 
         app = new App(new AppConfiguration.Builder("realmsyncapp-flfge")
@@ -266,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 Log.e("QUICKSTART", "Failed to log in. Error: " + result.getError());
             }
         });
+
 
     }
 
@@ -362,7 +365,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     public void saveTrip() {
+        Realm realm = null;
+        try {
+            realm = Realm.getDefaultInstance();
+            TripDoc tripDoc = new TripDoc();
+            tripDoc.setDistance(trip.get_totalDistance());
+            tripDoc.setDuration(trip.get_tripDuration().toMillis()/1000);
+            tripDoc.setStart_point(new PointDoc(trip.get_startPoint()));
 
+            RealmList<PointDoc> pointDocs =PointDoc.toRealmList(trip.getRoutePoints());
+            tripDoc.setPoints(pointDocs);
+
+        }
+        finally {
+            if(realm != null)
+                realm.close();
+        }
 
     }
 
