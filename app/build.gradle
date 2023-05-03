@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+apply plugin: "realm-android"
+
+realm {
+    syncEnabled = true
+}
+
 android {
     compileSdk 33
 
@@ -22,8 +28,21 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    packagingOptions {
+        resources.excludes.add("META-INF/native-image/org.mongodb/bson/native-image.properties")
+    }
+    tasks.withType(JavaCompile) {
+        options.compilerArgs.add("-Xlint:unchecked")
+    }
+    namespace 'com.example.traffictracker'
+}
+
+configurations {
+    all {
+        exclude group: 'org.mongodb', module: 'bson-record-codec'
     }
     namespace 'com.example.traffictracker'
 }
@@ -37,5 +56,4 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'org.mongodb:mongodb-driver-sync:4.9.1'
-    implementation 'ch.qos.logback:logback-classic:1.2.11'
 }

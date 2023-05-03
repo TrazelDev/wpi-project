@@ -4,6 +4,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import io.realm.annotations.RealmClass;
+
 public class Point {
     public double _latitude; // קו רוחב
     public double _longitude; // קו אורך

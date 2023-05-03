@@ -9,6 +9,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 
+import io.realm.annotations.RealmClass;
+
 
 public class Trip {
     private ArrayList<Stop> _stopsList;
@@ -76,6 +78,7 @@ public class Trip {
         _endTime = TimeMan.getDate();
         _tripDuration = TimeMan.DateDiff(_startTime, _endTime);
         _tripDuration = _tripDuration.minus(_stopDuration);
+        _endPoint = finalPoint;
     }
 
 
@@ -122,7 +125,6 @@ public class Trip {
         if(routePoints.size() != 0)
         {
             _totalDistance += routePoints.get(routePoints.size() - 1).distanceTo(newPoint);
-            routePoints.add(newPoint);
         }
         routePoints.add(newPoint);
 
@@ -162,5 +164,33 @@ public class Trip {
         long minutes = duration.toMinutes();
         long seconds = duration.minusMinutes(minutes).getSeconds();
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    public Duration get_tripDuration() {
+        return _tripDuration;
+    }
+
+    public Point get_startPoint() {
+        return _startPoint;
+    }
+
+    public Point get_endPoint() {
+        return _endPoint;
+    }
+
+    public double get_totalDistance() {
+        return _totalDistance;
+    }
+
+    public ArrayList<TrafficJam> get_jamList() {
+        return _jamList;
+    }
+
+    public Duration get_jamDuration() {
+        return _jamDuration;
+    }
+
+    public ArrayList<Point> getRoutePoints() {
+        return routePoints;
     }
 }
