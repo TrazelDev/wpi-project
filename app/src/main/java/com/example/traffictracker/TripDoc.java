@@ -1,7 +1,5 @@
 package com.example.traffictracker;
 
-import org.bson.types.ObjectId;
-
 import java.time.Duration;
 import java.util.ArrayList;
 
@@ -14,20 +12,20 @@ import io.realm.mongodb.sync.SyncConfiguration;
 public class TripDoc extends RealmObject {
 
     @PrimaryKey
-    private ObjectId _id;
+    private String _id;
     private double distance;
     private long duration;
     private PointDoc start_point;
     private PointDoc end_point;
     private RealmList<PointDoc> points;
     private String trip_type;
-    private ObjectId user_id;
+    private String user_id;
 
-    public ObjectId get_id() {
+    public String get_id() {
         return _id;
     }
 
-    public void set_id(ObjectId _id) {
+    public void set_id(String _id) {
         this._id = _id;
     }
 
@@ -79,16 +77,16 @@ public class TripDoc extends RealmObject {
         this.trip_type = trip_type;
     }
 
-    public ObjectId getUser_id() {
+    public String getUser_id() {
         return user_id;
     }
 
-    public void setUser_id(ObjectId user_id) {
+    public void setUser_id(String user_id) {
         this.user_id = user_id;
     }
 
 
-    public TripDoc(ObjectId _id, Point start_point, String trip_type, ObjectId user_id) {
+    public TripDoc(String _id, Point start_point, String trip_type, String user_id) {
         this._id = _id;
         this.start_point = new PointDoc(start_point);
         this.trip_type = trip_type;

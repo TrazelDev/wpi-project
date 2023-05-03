@@ -1,17 +1,15 @@
 package com.example.traffictracker;
 
-import org.bson.types.ObjectId;
-
 import io.realm.annotations.PrimaryKey;
 
 public class UserDoc {
     @PrimaryKey
-    private ObjectId _id;
+    private String _id;
     private String name;
     private PointDoc address;
     private String gender;
 
-    public UserDoc(ObjectId _id, String name, Point address, String gender) {
+    public UserDoc(String _id, String name, Point address, String gender) {
         this._id = _id;
         this.name = name;
         this.address = new PointDoc(address);
@@ -20,11 +18,11 @@ public class UserDoc {
 
     public UserDoc() {}
 
-    public ObjectId get_id() {
+    public String get_id() {
         return _id;
     }
 
-    public void set_id(ObjectId _id) {
+    public void set_id(String _id) {
         this._id = _id;
     }
 

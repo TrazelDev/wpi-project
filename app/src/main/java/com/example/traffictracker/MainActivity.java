@@ -49,6 +49,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -253,10 +254,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             if (result.isSuccess()) {
                 Log.v("QUICKSTART", "Successfully authenticated anonymously.");
                 User user = app.currentUser();
-                String partitionValue = "wpi_project";
                 SyncConfiguration config = new SyncConfiguration.Builder(
-                        user,
-                        partitionValue)
+                        user)
                         .build();
                 uiThreadRealm = Realm.getInstance(config);
                 addChangeListenerToRealm(uiThreadRealm);

@@ -1,19 +1,18 @@
 package com.example.traffictracker;
 
-import org.bson.types.ObjectId;
 
 import io.realm.RealmList;
 import io.realm.annotations.PrimaryKey;
 
 public class TrafficJamDoc {
     @PrimaryKey
-    private ObjectId _id;
+    private String _id;
     private double length;
-    private RealmList<ObjectId> trip;
+    private RealmList<String> trip;
     private int count;
     private boolean is_valid;
 
-    public TrafficJamDoc(ObjectId _id, double length, RealmList<ObjectId> trip, int count, boolean is_valid) {
+    public TrafficJamDoc(String _id, double length, RealmList<String> trip, int count, boolean is_valid) {
         this._id = _id;
         this.length = length;
         this.trip = trip;
@@ -23,11 +22,11 @@ public class TrafficJamDoc {
 
     public TrafficJamDoc() {}
 
-    public ObjectId get_id() {
+    public String get_id() {
         return _id;
     }
 
-    public void set_id(ObjectId _id) {
+    public void set_id(String _id) {
         this._id = _id;
     }
 
@@ -39,11 +38,11 @@ public class TrafficJamDoc {
         this.length = length;
     }
 
-    public RealmList<ObjectId> getTrip() {
+    public RealmList<String> getTrip() {
         return trip;
     }
 
-    public void setTrip(RealmList<ObjectId> trip) {
+    public void setTrip(RealmList<String> trip) {
         this.trip = trip;
     }
 
