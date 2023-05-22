@@ -9,6 +9,7 @@ import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
+import io.realm.annotations.Required;
 import io.realm.mongodb.sync.SyncConfiguration;
 
 public class TripDoc extends RealmObject {
@@ -37,14 +38,6 @@ public class TripDoc extends RealmObject {
 
     public void setDistance(double distance) {
         this.distance = distance;
-    }
-
-    public long getDuration() {
-        return duration;
-    }
-
-    public void setDuration(long duration) {
-        this.duration = duration;
     }
 
     public PointDoc getStart_point() {
@@ -87,6 +80,10 @@ public class TripDoc extends RealmObject {
         this.user_id = user_id;
     }
 
+    public long getDuration() { return duration; }
+    public void setDuration(long duration) {
+        this.duration = duration;
+    }
 
     public TripDoc(ObjectId _id, Point start_point, String trip_type, ObjectId user_id) {
         this._id = _id;

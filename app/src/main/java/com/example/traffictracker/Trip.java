@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import io.realm.annotations.RealmClass;
 
@@ -158,12 +159,12 @@ public class Trip {
     }
 
     @SuppressLint("NewApi")
-    public static String getDurationString(Duration duration)
+    private static String getDurationString(Duration duration)
     {
         long hours = duration.toHours();
         long minutes = duration.toMinutes();
         long seconds = duration.minusMinutes(minutes).getSeconds();
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
     }
 
     public Duration get_tripDuration() {

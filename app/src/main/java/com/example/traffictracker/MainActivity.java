@@ -30,16 +30,11 @@ import android.widget.RadioGroup;
 import android.Manifest;
 import android.widget.TextView;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 
 
-
-import org.bson.Document;
 import org.bson.types.ObjectId;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.time.Duration;
@@ -54,18 +49,27 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
+import io.realm.DynamicRealm;
+import io.realm.DynamicRealmObject;
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmFieldType;
 import io.realm.RealmList;
+import io.realm.RealmMigration;
+import io.realm.RealmObjectSchema;
 import io.realm.RealmResults;
+import io.realm.RealmSchema;
 import io.realm.mongodb.App;
 import io.realm.mongodb.AppConfiguration;
 import io.realm.mongodb.Credentials;
 import io.realm.mongodb.User;
+import io.realm.mongodb.sync.MutableSubscriptionSet;
+import io.realm.mongodb.sync.Subscription;
 import io.realm.mongodb.sync.SyncConfiguration;
-
+import io.realm.mongodb.sync.SyncSession;
+import io.realm.mongodb.sync.Sync;
 
 //tasks:
 // 1. create things to do when there is no location access to not destroy the data
@@ -80,14 +84,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private Button trafficJamButton;
 
     private TextView checking;
-    private ArrayList<Stop> stopList;
     private Trip trip;
     private Handler handler;
-    private int i;
     private App app;
     private Realm uiThreadRealm;
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -183,7 +184,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
                 return false;
             }
-
             public void endButtonOperations() {
                 transportationOptions.setEnabled(true);
                 startButton.setText("Start");
@@ -247,56 +247,71 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private void connectToRealm() {
 
         Realm.init(this);
-
-        app = new App(new AppConfiguration.Builder("realmsyncapp-flfge")
+        String appID = "realmsyncapp-flfge";
+        app = new App(new AppConfiguration.Builder(appID)
                 .build());
 
         Credentials credentials = Credentials.anonymous();
         app.loginAsync(credentials, result -> {
             if (result.isSuccess()) {
                 Log.v("QUICKSTART", "Successfully authenticated anonymously.");
-                User user = app.currentUser();
+                User user = result.get();
                 SyncConfiguration config = new SyncConfiguration.Builder(
                         user)
+                        .schemaVersion(3)
+                        .modules(new newRealmModule())
                         .build();
-                uiThreadRealm = Realm.getInstance(config);
-                addChangeListenerToRealm(uiThreadRealm);
+                Realm.getInstanceAsync(config, new Realm.Callback() {
+                    @Override
+                    public void onSuccess(@NonNull Realm realm) {
+                        Log.v("TEST", "Successfully opened a realm.");
+                        Log.v("Realm", "Realm Path: " + realm.getPath());
+
+                    }
+
+                });
                 FutureTask<String> task = new FutureTask<>(new BackgroundQuickStart(app.currentUser()), "test");
                 ExecutorService executorService = Executors.newFixedThreadPool(2);
                 executorService.execute(task);
-            } else {
-                Log.e("QUICKSTART", "Failed to log in. Error: " + result.getError());
+                Realm.setDefaultConfiguration(config);
+                Log.v("Realm", "Realm Schema: " + Realm.getDefaultInstance().getSchema());
+
+
+
+            }
+
+            else {
+                Log.e("EXAMPLE", "Failed to log in: " + result.getError().getErrorMessage());
             }
         });
 
-
     }
+
+
+
 
     private void addChangeListenerToRealm(Realm realm) {
         // all tasks in the realm
         RealmResults<Task> tasks = uiThreadRealm.where(Task.class).findAllAsync();
-        tasks.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Task>>() {
-            @Override
-            public void onChange(RealmResults<Task> collection, OrderedCollectionChangeSet changeSet) {
-                // process deletions in reverse order if maintaining parallel data structures so indices don't change as you iterate
-                OrderedCollectionChangeSet.Range[] deletions = changeSet.getDeletionRanges();
-                for (OrderedCollectionChangeSet.Range range : deletions) {
-                    Log.v("QUICKSTART", "Deleted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));
-                }
-                OrderedCollectionChangeSet.Range[] insertions = changeSet.getInsertionRanges();
-                for (OrderedCollectionChangeSet.Range range : insertions) {
-                    Log.v("QUICKSTART", "Inserted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
-                OrderedCollectionChangeSet.Range[] modifications = changeSet.getChangeRanges();
-                for (OrderedCollectionChangeSet.Range range : modifications) {
-                    Log.v("QUICKSTART", "Updated range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
+        tasks.addChangeListener((collection, changeSet) -> {
+            // process deletions in reverse order if maintaining parallel data structures so indices don't change as you iterate
+            OrderedCollectionChangeSet.Range[] deletions = changeSet.getDeletionRanges();
+            for (OrderedCollectionChangeSet.Range range : deletions) {
+                Log.v("QUICKSTART", "Deleted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));
             }
+            OrderedCollectionChangeSet.Range[] insertions = changeSet.getInsertionRanges();
+            for (OrderedCollectionChangeSet.Range range : insertions) {
+                Log.v("QUICKSTART", "Inserted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
+            OrderedCollectionChangeSet.Range[] modifications = changeSet.getChangeRanges();
+            for (OrderedCollectionChangeSet.Range range : modifications) {
+                Log.v("QUICKSTART", "Updated range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
         });
     }
 
     public void createDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Error");
-        builder.setMessage("Phone has no permission for location tracker.\npls give an access for the location tracking in the settings and start a new trip after that");
+        builder.setMessage("Phone has no permission for location tracker.\nplease give access to location tracking in settings and start a new trip after doing so");
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // do something
@@ -365,54 +380,44 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     public void saveTrip() {
-        Realm realm = null;
-        try {
-            realm = Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
+
+        try (realm) {
+            realm.beginTransaction();
+
             TripDoc tripDoc = new TripDoc();
             tripDoc.setDistance(trip.get_totalDistance());
-            tripDoc.setDuration(trip.get_tripDuration().toMillis()/1000);
+            tripDoc.setDuration(trip.get_tripDuration().toMillis());
             tripDoc.setStart_point(new PointDoc(trip.get_startPoint()));
 
-            RealmList<PointDoc> pointDocs =PointDoc.toRealmList(trip.getRoutePoints());
+            RealmList<PointDoc> pointDocs = PointDoc.toRealmList(trip.getRoutePoints());
             tripDoc.setPoints(pointDocs);
 
+            realm.insert(tripDoc);
+            realm.commitTransaction();
+        } catch (Exception e) {
+            Log.v("SHIT", "Couldn't save trip: \n" + e);
+            realm.cancelTransaction();
         }
         finally {
-            if(realm != null)
-                realm.close();
+            realm.close();
         }
 
     }
-
-
-//    private void AddValues(Document tripDoc) {
-//        double distance = trip.get_totalDistance();
-//        Duration duration = trip.get_tripDuration();
-//        Point start_point = trip.get_startPoint();
-//        Point end_point = trip.get_endPoint();
-//        int trip_type = trip.getTrackerState();
-//
-//        tripDoc.append("distance", distance);
-//        tripDoc.append("duration", duration);
-//        tripDoc.append("start_point", start_point);
-//        tripDoc.append("end_point", end_point);
-//        tripDoc.append("trip_type", trip_type);
-
-//}
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
 
     }
 
-    public class BackgroundQuickStart implements Runnable {
+    public static class BackgroundQuickStart implements Runnable {
         User user;
         public BackgroundQuickStart(User user) {
             this.user = user;
         }
         @Override
         public void run() {
-            String partitionValue = "My Project";
+            String partitionValue = "BackgroundTracker";
             SyncConfiguration config = new SyncConfiguration.Builder(
                     user,
                     partitionValue)
@@ -443,6 +448,37 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             // because this background thread uses synchronous realm transactions, at this point all
             // transactions have completed and we can safely close the realm
             backgroundThreadRealm.close();
+        }
+    }
+
+    public static class TheRealmMigration implements RealmMigration {
+        @Override
+        public void migrate(DynamicRealm realm, long oldVersion, long newVersion) {
+            RealmSchema schema = realm.getSchema();
+
+            // Check if migration is needed
+            if (oldVersion == 0) {
+                // Perform migration from version 0 to version 1
+                RealmObjectSchema tripDocSchema = schema.get("TripDoc");
+
+                assert tripDocSchema != null;
+                if (tripDocSchema.hasField("duration") && !(tripDocSchema.getFieldType("duration") == RealmFieldType.INTEGER)) {
+                    tripDocSchema.removeField("duration")
+                            .addField("duration", Long.class);
+                }
+                else if(!tripDocSchema.hasField("duration"))
+                    tripDocSchema.addField("duration", Long.class);
+
+                if (tripDocSchema.hasField("duration") && !(tripDocSchema.getFieldType("durationString") == RealmFieldType.STRING)) {
+                    tripDocSchema.removeField("duration")
+                            .addField("duration", Long.class);
+                }
+                else if (!tripDocSchema.hasField("durationString"))
+                    tripDocSchema.addField("durationString", String.class);
+
+
+                oldVersion++;
+            }
         }
     }
 }
