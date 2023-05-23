@@ -288,26 +288,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
 
-
-
-    private void addChangeListenerToRealm(Realm realm) {
-        // all tasks in the realm
-        RealmResults<Task> tasks = uiThreadRealm.where(Task.class).findAllAsync();
-        tasks.addChangeListener((collection, changeSet) -> {
-            // process deletions in reverse order if maintaining parallel data structures so indices don't change as you iterate
-            OrderedCollectionChangeSet.Range[] deletions = changeSet.getDeletionRanges();
-            for (OrderedCollectionChangeSet.Range range : deletions) {
-                Log.v("QUICKSTART", "Deleted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));
-            }
-            OrderedCollectionChangeSet.Range[] insertions = changeSet.getInsertionRanges();
-            for (OrderedCollectionChangeSet.Range range : insertions) {
-                Log.v("QUICKSTART", "Inserted range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
-            OrderedCollectionChangeSet.Range[] modifications = changeSet.getChangeRanges();
-            for (OrderedCollectionChangeSet.Range range : modifications) {
-                Log.v("QUICKSTART", "Updated range: " + range.startIndex + " to " + (range.startIndex + range.length - 1));                            }
-        });
-    }
-
     public void createDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Error");
@@ -396,7 +376,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             realm.insert(tripDoc);
             realm.commitTransaction();
         } catch (Exception e) {
-            Log.v("SHIT", "Couldn't save trip: \n" + e);
+            Log.e("SHIT", "Couldn't save trip: \n" + e);
             realm.cancelTransaction();
         }
         finally {

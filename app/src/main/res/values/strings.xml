@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Traffic Tracker</string>
+    <string name="school_string">Choose your school: </string>
+    <string name="neighbor_string">Choose your neighborhood:</string>
+    <string-array name="schools">
+        <item>Ort Kramim</item>
+        <item>Ort Psagot</item>
+    </string-array>
+    <string-array name="neighborhoods">
+        <item>Rabin</item>
+        <item>Giv'at Ram</item>
+        <item>Makosh</item>
+        <item>Ma'aravit</item>
+        <item>Dromit</item>
+        <item>HaGalil</item>
+    </string-array>
 </resources>

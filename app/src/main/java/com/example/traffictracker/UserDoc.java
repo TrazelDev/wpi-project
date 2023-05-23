@@ -2,19 +2,22 @@ package com.example.traffictracker;
 
 import org.bson.types.ObjectId;
 
+import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
+import io.realm.annotations.RealmClass;
 
-public class UserDoc {
+@RealmClass
+public class UserDoc extends RealmObject {
     @PrimaryKey
     private ObjectId _id;
-    private String name;
-    private PointDoc address;
+    private String school;
+    private String neighborhood;
     private String gender;
 
-    public UserDoc(ObjectId _id, String name, Point address, String gender) {
+    public UserDoc(ObjectId _id, String school, String neighborhood, String gender) {
         this._id = _id;
-        this.name = name;
-        this.address = new PointDoc(address);
+        this.school = school;
+        this.neighborhood = neighborhood;
         this.gender = gender;
     }
 
@@ -28,20 +31,20 @@ public class UserDoc {
         this._id = _id;
     }
 
-    public String getName() {
-        return name;
+    public String getSchool() {
+        return school;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSchool(String school) {
+        this.school = school;
     }
 
-    public PointDoc getAddress() {
-        return address;
+    public String getNeighborhood() {
+        return neighborhood;
     }
 
-    public void setAddress(PointDoc address) {
-        this.address = address;
+    public void setNeighborhood(String neighborhood) {
+        this.neighborhood = neighborhood;
     }
 
     public String getGender() {
