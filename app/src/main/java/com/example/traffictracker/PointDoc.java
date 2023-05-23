@@ -1,5 +1,8 @@
 package com.example.traffictracker;
 
+import java.util.ArrayList;
+
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.RealmClass;
 
@@ -17,5 +20,13 @@ public class PointDoc extends RealmObject {
     public PointDoc(double longitude, double latitude) {
         this.longitude = longitude;
         this.latitude = latitude;
+    }
+
+    public static RealmList<PointDoc> toRealmList(ArrayList<Point> p) {
+        RealmList<PointDoc> result = new RealmList<>();
+        for(int i=0; i<p.size(); i++) {
+            result.add(new PointDoc(p.get(i)));
+        }
+        return result;
     }
 }
