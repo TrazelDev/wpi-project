@@ -197,8 +197,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 findViewById(R.id.foot_button).setEnabled(true);
                 findViewById(R.id.bicycle_button).setEnabled(true);
             }
-
-
         });
 
         stopButton.setOnClickListener(new View.OnClickListener() {
@@ -275,9 +273,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 executorService.execute(task);
                 Realm.setDefaultConfiguration(config);
                 Log.v("Realm", "Realm Schema: " + Realm.getDefaultInstance().getSchema());
-
-
-
             }
 
             else {
@@ -366,12 +361,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             realm.beginTransaction();
 
             TripDoc tripDoc = new TripDoc();
+            tripDoc.set_id(ObjectId.get());
             tripDoc.setDistance(trip.get_totalDistance());
             tripDoc.setDuration(trip.get_tripDuration().toMillis());
-            tripDoc.setStart_point(new PointDoc(trip.get_startPoint()));
+            tripDoc.setDurationString(trip.get_tripDuration().toString());
 
             RealmList<PointDoc> pointDocs = PointDoc.toRealmList(trip.getRoutePoints());
             tripDoc.setPoints(pointDocs);
+            tripDoc.setStart_point(new PointDoc(trip.get_startPoint()));
+            tripDoc.setEnd_point(new PointDoc(trip.get_endPoint()));
+            tripDoc.setUser_id(RegistrationActivity.userDoc.get_id());
 
             realm.insert(tripDoc);
             realm.commitTransaction();

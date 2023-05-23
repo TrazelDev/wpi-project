@@ -18,6 +18,7 @@ public class TripDoc extends RealmObject {
     private ObjectId _id;
     private double distance;
     private long duration;
+    private String durationString;
     private PointDoc start_point;
     private PointDoc end_point;
     private RealmList<PointDoc> points;
@@ -83,6 +84,14 @@ public class TripDoc extends RealmObject {
     public long getDuration() { return duration; }
     public void setDuration(long duration) {
         this.duration = duration;
+    }
+
+    public String getDurationString() {
+        return durationString;
+    }
+
+    public void setDurationString(String durationString) {
+        this.durationString = durationString;
     }
 
     public TripDoc(ObjectId _id, Point start_point, String trip_type, ObjectId user_id) {

@@ -42,6 +42,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private RadioGroup radioGroupGender;
     private Spinner schools, neighborhoods;
     private App app;
+    public static UserDoc userDoc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +87,7 @@ public class RegistrationActivity extends AppCompatActivity {
         try (realm) {
             realm.beginTransaction();
 
-            UserDoc userDoc = new UserDoc();
+            userDoc = new UserDoc();
             userDoc.set_id(ObjectId.get());
             String gender = ((RadioButton)(findViewById(radioGroupGender.getCheckedRadioButtonId()))).getText().toString();
             userDoc.setGender(gender);
