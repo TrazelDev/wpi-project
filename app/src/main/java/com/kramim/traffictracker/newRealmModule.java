@@ -1,11 +1,7 @@
-package com.example.traffictracker;
-
-import java.lang.annotation.Annotation;
+package com.kramim.traffictracker;
 
 import io.realm.RealmConfiguration;
-import io.realm.RealmMigration;
 import io.realm.annotations.RealmModule;
-import io.realm.annotations.RealmNamingPolicy;
 
 @RealmModule(allClasses = true)
 public class newRealmModule {

@@ -1,4 +1,4 @@
-package com.example.traffictracker;
+package com.kramim.traffictracker;
 
 import android.util.Log;
 

@@ -1,16 +1,10 @@
-package com.example.traffictracker;
+package com.kramim.traffictracker;
 
 import org.bson.types.ObjectId;
 
-import java.time.Duration;
-import java.util.ArrayList;
-
-import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-import io.realm.annotations.Required;
-import io.realm.mongodb.sync.SyncConfiguration;
 
 public class TripDoc extends RealmObject {
 

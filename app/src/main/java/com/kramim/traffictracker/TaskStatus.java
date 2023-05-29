@@ -1,4 +1,4 @@
-package com.example.traffictracker;
+package com.kramim.traffictracker;
 
 public enum TaskStatus {
     Open("Open"),

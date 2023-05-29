@@ -21,7 +21,7 @@
 
         <!-- Set RegistrationActivity as the first activity to launch -->
         <activity
-            android:name=".RegistrationActivity"
+            android:name="com.kramim.traffictracker.RegistrationActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,7 +30,7 @@
         </activity>
 
         <!-- MainActivity is now the second activity -->
-        <activity android:name=".MainActivity" />
+        <activity android:name="com.kramim.traffictracker.MainActivity" />
 
     </application>
 

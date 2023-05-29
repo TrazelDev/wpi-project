@@ -8,9 +8,9 @@
     </string-array>
     <string-array name="neighborhoods">
         <item>Rabin</item>
-        <item>Giv'at Ram</item>
+        <item>Giv\'at Ram</item>
         <item>Makosh</item>
-        <item>Ma'aravit</item>
+        <item>Ma\'aravit</item>
         <item>Dromit</item>
         <item>HaGalil</item>
     </string-array>

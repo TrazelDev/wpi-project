@@ -1,7 +1,6 @@
-package com.example.traffictracker;
+package com.kramim.traffictracker;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -17,44 +16,34 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.UserHandle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.Manifest;
 import android.widget.TextView;
 
 
+import com.example.traffictracker.R;
 
 import org.bson.types.ObjectId;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 import io.realm.DynamicRealm;
-import io.realm.DynamicRealmObject;
-import io.realm.OrderedCollectionChangeSet;
-import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
-import io.realm.RealmConfiguration;
 import io.realm.RealmFieldType;
 import io.realm.RealmList;
 import io.realm.RealmMigration;
@@ -65,11 +54,7 @@ import io.realm.mongodb.App;
 import io.realm.mongodb.AppConfiguration;
 import io.realm.mongodb.Credentials;
 import io.realm.mongodb.User;
-import io.realm.mongodb.sync.MutableSubscriptionSet;
-import io.realm.mongodb.sync.Subscription;
 import io.realm.mongodb.sync.SyncConfiguration;
-import io.realm.mongodb.sync.SyncSession;
-import io.realm.mongodb.sync.Sync;
 
 //tasks:
 // 1. create things to do when there is no location access to not destroy the data
@@ -102,12 +87,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         trafficJamButton.setVisibility(View.GONE);
         startButton.setBackgroundColor(getResources().getColor(android.R.color.holo_green_dark, null));
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
+        Realm.init(this);
         checking = findViewById(R.id.textView1);
         trip = null;
 
-        connectToRealm();
-        
         handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
@@ -242,45 +225,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
-    private void connectToRealm() {
-
-        Realm.init(this);
-        String appID = "realmsyncapp-flfge";
-        app = new App(new AppConfiguration.Builder(appID)
-                .build());
-
-        Credentials credentials = Credentials.anonymous();
-        app.loginAsync(credentials, result -> {
-            if (result.isSuccess()) {
-                Log.v("QUICKSTART", "Successfully authenticated anonymously.");
-                User user = result.get();
-                SyncConfiguration config = new SyncConfiguration.Builder(
-                        user)
-                        .schemaVersion(3)
-                        .modules(new newRealmModule())
-                        .build();
-                Realm.getInstanceAsync(config, new Realm.Callback() {
-                    @Override
-                    public void onSuccess(@NonNull Realm realm) {
-                        Log.v("TEST", "Successfully opened a realm.");
-                        Log.v("Realm", "Realm Path: " + realm.getPath());
-
-                    }
-
-                });
-                FutureTask<String> task = new FutureTask<>(new BackgroundQuickStart(app.currentUser()), "test");
-                ExecutorService executorService = Executors.newFixedThreadPool(2);
-                executorService.execute(task);
-                Realm.setDefaultConfiguration(config);
-                Log.v("Realm", "Realm Schema: " + Realm.getDefaultInstance().getSchema());
-            }
-
-            else {
-                Log.e("EXAMPLE", "Failed to log in: " + result.getError().getErrorMessage());
-            }
-        });
-
-    }
 
 
     public void createDialog() {
