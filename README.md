@@ -11,5 +11,5 @@ This is a traffic detector project aimed at identifying areas with the most traf
 ## Implementation:
 - We implement routes by checking the current location and time for each type of transportation, allowing us to create specific user routes. Additionally, users can signal when they encounter a traffic jam or make a stop. Automatic detection is also available in case the user forgets to signal.
 
-[!Note]
+> [!Note]
 > The final version of this project works only on the Flamingo version of Android Studio. We couldn't make it work with other versions due to Android Studio compatibility issues.
